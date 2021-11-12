@@ -39,8 +39,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 // Reset password
-Route::post('/submit-new-password/{token}', [ AuthController::class ,'resetPassword']);
-Route::post('/reset_password_without_token' , [AuthController::class, 'validatePasswordRequest']);
+Route::post('/submit-new-password/{token}', [AuthController::class, 'resetPassword']);
+Route::post('/reset_password_without_token', [AuthController::class, 'validatePasswordRequest']);
 Route::get('/reset-password/{token}', [AuthController::class, 'getResetPassword'])->name('getResetPassword');
 
 
@@ -100,3 +100,11 @@ Route::get('/search/{key}', [SearchController::class, 'search']);
 
 //Offers
 Route::get('/offers', [OfferController::class, 'index']);
+
+
+
+// Patreon Redirect
+
+Route::get('/patreon-register', [AuthController::class, 'patreonRegister']);
+Route::get('/patreon-login', [AuthController::class, 'patreonLogin']);
+Route::get('/patreon-data', [AuthController::class, 'patreonData']);

@@ -14,6 +14,7 @@ use App\Traits\ApiResponseTrait;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
@@ -39,13 +40,13 @@ class AuthController extends Controller
     }
 
 
+
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'name' => ['required', 'string', 'max:255', 'min:3'],
             'email' => ['required', 'email', 'unique:users,email', 'max:255'],
-            'password' => ['required', 'string', 'min:8', 'max:255', 'confirmed'],
-            'type' => 'required',
+            'password' => ['required', 'string', 'min:8', 'max:255', 'confirmed']
         ]);
 
 
@@ -76,6 +77,7 @@ class AuthController extends Controller
 
         return $this->apiResponse($data, 'User registered successfully');
     }
+
 
     public function login(Request $request)
     {
@@ -158,14 +160,9 @@ class AuthController extends Controller
         }
 
         $confirm_token = compact('token');
-        $url = 'http://localhost:4200/auth/reset-password/' . $confirm_token['token'];
+        $url = 'https://beastmodeanalysis.com/auth/reset-password/' . $confirm_token['token'];
         return redirect()->away($url);
     }
-
-
-
-
-
 
 
     public function resetPassword($token, Request $request)
@@ -199,4 +196,122 @@ class AuthController extends Controller
             return $data;
         }
     }
+
+
+    public $data;
+    public function patreonRegister (Request $request) {
+        // dd($request->query()['code']);
+        $code = $request->query()['code'];
+        if ($code) {
+            // $response = Http::post('https://www.patreon.com/api/oauth2/token?code=' . $code . '&grant_type=authorization_code&client_id=8BNNHk815QuQxUu7du7TiB7AmRfmAt2kIUy3x4N8Tc5fN3tFtImZf4S1ORIbx5Cp&client_secret=V-kazaMie8BPvRsoB6kT2CeIJ4vjRezlkkoNBcyd3AE_81yUcUATrdawIV_WDdC5&redirect_uri=https://jerryromine.com/admin/public/admin.php/api/patreon-register&Content-Type=application/x-www-form-urlencoded');
+            $response = Http::post('https://www.patreon.com/api/oauth2/token?code=' . $code . '&grant_type=authorization_code&client_id=8BNNHk815QuQxUu7du7TiB7AmRfmAt2kIUy3x4N8Tc5fN3tFtImZf4S1ORIbx5Cp&client_secret=V-kazaMie8BPvRsoB6kT2CeIJ4vjRezlkkoNBcyd3AE_81yUcUATrdawIV_WDdC5&redirect_uri=http://localhost:8000/api/patreon-register&Content-Type=application/x-www-form-urlencoded');
+            $response->json();
+            $responseData = $response->json();
+
+            if($responseData['access_token']){
+                $token = $responseData['access_token'];
+
+                // $responseUserData = Http::withToken($token)->get('https://www.patreon.com/api/oauth2/api/current_user');
+                // $responseUserData = Http::withToken($token)->get('https://www.patreon.com/api/oauth2/api/current_user/campaigns');
+                $responseUserData = Http::withToken($token)->get('https://www.patreon.com/api/oauth2/api/campaigns/4660399/pledges');
+                $responseUserData->json();
+                $responseAllUserData = $responseUserData->json();
+                dd($responseAllUserData);
+                if ($responseAllUserData['data']) {
+                    $data = $responseAllUserData['data'];
+                    $isSuspended = $data['attributes']['is_suspended'];
+                    $full_name = $data['attributes']['full_name'];
+                    $email = $data['attributes']['email'];
+                    // session(['isSuspended' => $this->data['attributes']['can_see_nsfw']]);
+                    // session(['full_name'=> $this->data['attributes']['full_name']]);
+                    // session(['email'=> $this->data['attributes']['email']]);
+                    // $data = session()->all();
+
+                    if($isSuspended != null){
+                        $url = 'https://beastmodeanalysis.com/auth/register/?done=true&name='.$full_name.'&email='.$email;
+                        return redirect()->away($url);
+                    }
+
+                    $url = 'https://beastmodeanalysis.com/auth/login/?done=false';
+                    return redirect()->away($url);
+
+                }
+
+                $url = 'https://beastmodeanalysis.com/auth/login/?done=false';
+                return redirect()->away($url);
+            }
+
+            $url = 'https://beastmodeanalysis.com/auth/login/?done=false';
+            return redirect()->away($url);
+        }
+
+        $url = 'https://beastmodeanalysis.com/auth/login/';
+        return redirect()->away($url);
+    }
+
+
+    public function patreonLogin(Request $request){
+        $code = $request->query()['code'];
+        if ($code) {
+            $response = Http::post('https://www.patreon.com/api/oauth2/token?code=' . $code . '&grant_type=authorization_code&client_id=l_C9HqfSV57DMgkpqvUvatGVHe2xBZechBUN0AbQ1I6Tnfu6U5R90gbkVjvVWuef&client_secret=xjOP-aqVwvTfDbTrtZ5v-nACsc91rs2-qR2H5S-V31hvW8NbvBasOi03zEDRVTQF&redirect_uri=https://jerryromine.com/admin/public/admin.php/api/patreon-login&Content-Type=application/x-www-form-urlencoded');
+            $response->json();
+            $responseData = $response->json();
+
+            if($responseData['access_token']){
+                $token = $responseData['access_token'];
+
+                $responseUserData = Http::withToken($token)->get('https://www.patreon.com/api/oauth2/api/current_user');
+                $responseUserData->json();
+                $responseAllUserData = $responseUserData->json();
+
+                if ($responseAllUserData['data']) {
+                    $data = $responseAllUserData['data'];
+                    $is_suspended = $data['attributes']['is_suspended'];
+                    $email = $data['attributes']['email'];
+                    // session(['is_suspended' => $this->data['attributes']['can_see_nsfw']]);
+                    // session(['full_name'=> $this->data['attributes']['full_name']]);
+                    // session(['email'=> $this->data['attributes']['email']]);
+                    // $data = session()->all();
+
+                    if($is_suspended != null){
+                        $url = 'https://beastmodeanalysis.com/auth/login/?done=true&email='.$email;
+                        return redirect()->away($url);
+                    }
+
+                    // $url = 'https://beastmodeanalysis.com/auth/login/?done=false';
+                    $url = 'https://beastmodeanalysis.com/auth/login/?done=false';
+                    return redirect()->away($url);
+
+                }
+
+                $url = 'https://beastmodeanalysis.com/auth/login/?done=false';
+                return redirect()->away($url);
+            }
+
+            $url = 'https://beastmodeanalysis.com/auth/login/?done=false';
+            return redirect()->away($url);
+        }
+
+        $url = 'https://beastmodeanalysis.com/auth/login/';
+        return redirect()->away($url);
+    }
+
+
+    public function patreonData(){
+        dd(session()->all());
+        $full_name = session()->get('full_name');
+        $email = session()->get('email');
+        $is_suspended = session()->get('is_suspended');
+
+        $data = [
+            'full_name' => $full_name,
+            'email' => $email,
+            'is_suspended' => $is_suspended
+        ];
+
+        return $data;
+    }
+
+
+
 }
