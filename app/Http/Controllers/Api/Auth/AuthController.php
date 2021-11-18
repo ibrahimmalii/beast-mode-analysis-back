@@ -48,7 +48,11 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => ['required', 'string', 'max:255', 'min:3'],
             'email' => ['required', 'email', 'unique:users,email', 'max:255'],
-            'password' => ['required', 'string', 'min:8', 'max:255', 'confirmed']
+            'password' => ['required', 'string', 'min:8', 'max:255', 'confirmed'],
+            'payer_email' => ['required', 'string', 'min:8', 'max:255'],
+            'payer_id' => ['required'],
+            'amount_paid' => ['required'],
+            'expire_date' => ['required']
         ]);
 
 
@@ -61,8 +65,13 @@ class AuthController extends Controller
         $user->name = $request->name;
         $user->email = $request->email;
         $user->password = Hash::make($request->password);
+        $user->payer_email = $request->payer_email;
+        $user->payer_id = $request->payer_id;
+        $user->amount_paid = $request->amount_paid;
+        $user->expire_date = $request->expire_date;
         $user->monthly_number_of_requests = 0;
         $user->tier_id = 1;
+        $user->subscribe_status = 'COMPLETED';
 
 
         $user->save();
@@ -215,8 +224,6 @@ class AuthController extends Controller
                 $token = $responseData['access_token'];
 
                 $responseUserData = Http::withToken($token)->get('https://www.patreon.com/api/oauth2/api/current_user');
-                // $responseUserData = Http::withToken($token)->get('https://www.patreon.com/api/oauth2/api/current_user/campaigns');
-                // $responseUserData = Http::withToken($token)->get('https://www.patreon.com/api/oauth2/api/campaigns/4660399/pledges');
                 $responseUserData->json();
                 $responseAllUserData = $responseUserData->json();
                 dd($responseAllUserData);

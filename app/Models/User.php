@@ -23,8 +23,11 @@ class User extends \TCG\Voyager\Models\User
         'name',
         'email',
         'password',
-        'type',
-        'patreon_tier'
+        'payer_email',
+        'payer_id',
+        'amount_paid',
+        'expire_date',
+        'subscribe_status'
     ];
 
     /**

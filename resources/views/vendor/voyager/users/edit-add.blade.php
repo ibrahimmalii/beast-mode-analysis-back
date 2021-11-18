@@ -61,19 +61,31 @@
                             </div>
                             <div class="form-group">
                                 <label for="monthly_requests">Monthly Requests</label>
-                                <input type="text" class="form-control" id="month" name="monthly_number_of_requests" value="" autocomplete="monthly requests">
+                                <input type="text" class="form-control" id="month" name="monthly_number_of_requests" value="0" autocomplete="monthly requests">
                             </div>
                             <div class="form-group">
                                 <label for="text">Daily Requests</label>
-                                <input type="text" class="form-control" id="month" name="daily_number_of_requests" value="" autocomplete="Daily requests">
+                                <input type="text" class="form-control" id="month" name="daily_number_of_requests" value="0" autocomplete="Daily requests">
                             </div>
                             <div class="form-group">
                                 <label for="text">Average Monthly Requests</label>
-                                <input type="text" class="form-control" id="month" name="avg_monthly_number_of_requests" value="" autocomplete="Average Monthly Requests">
+                                <input type="text" class="form-control" id="month" name="avg_monthly_number_of_requests" value="0" autocomplete="Average Monthly Requests">
                             </div>
                             <div class="form-group">
                                 <label for="tier">Tier ID</label>
-                                <input type="text" class="form-control" id="tierId" name="tier_id" value="" autocomplete="Tier ID">
+                                <input type="text" class="form-control" id="tierId" name="tier_id" value="1" autocomplete="Tier ID">
+                            </div>
+                            <div class="form-group">
+                                <label for="text">Payer ID</label>
+                                <input type="text" class="form-control" id="month" name="payer_id" value="" autocomplete="Payer ID">
+                            </div>
+                            <div class="form-group">
+                                <label for="text">Amount Paid</label>
+                                <input type="text" class="form-control" id="month" name="amount_paid" value="" autocomplete="Amount Paid">
+                            </div>
+                            <div class="form-group">
+                                <label for="text">Expire Date</label>
+                                <input type="text" class="form-control" id="month" name="expire_data" value="" autocomplete="Expire Date">
                             </div>
 
                             @can('editRoles', $dataTypeContent)
