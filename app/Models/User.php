@@ -27,7 +27,8 @@ class User extends \TCG\Voyager\Models\User
         'payer_id',
         'amount_paid',
         'expire_date',
-        'subscribe_status'
+        'subscribe_status',
+        'subscriptionID'
     ];
 
     /**

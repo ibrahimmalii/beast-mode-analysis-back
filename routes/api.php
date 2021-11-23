@@ -47,8 +47,9 @@ Route::get('/reset-password/{token}', [AuthController::class, 'getResetPassword'
 // // Auth Routes
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
-Route::get('/logout', [AuthController::class, 'logout']);
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 Route::get('/me', [AuthController::class, 'index'])->middleware('auth:sanctum');
+Route::post('/updateStatus/{id}', [AuthController::class, 'updateStatus']);
 
 
 

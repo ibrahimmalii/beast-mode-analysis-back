@@ -41,17 +41,13 @@ class AuthController extends Controller
         return $data;
     }
 
-
-
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'name' => ['required', 'string', 'max:255', 'min:3'],
             'email' => ['required', 'email', 'unique:users,email', 'max:255'],
             'password' => ['required', 'string', 'min:8', 'max:255', 'confirmed'],
-            'payer_email' => ['required', 'string', 'min:8', 'max:255'],
-            'payer_id' => ['required'],
-            'amount_paid' => ['required'],
+            'subscriptionID' => ['required'],
             'expire_date' => ['required']
         ]);
 
@@ -65,13 +61,12 @@ class AuthController extends Controller
         $user->name = $request->name;
         $user->email = $request->email;
         $user->password = Hash::make($request->password);
-        $user->payer_email = $request->payer_email;
-        $user->payer_id = $request->payer_id;
-        $user->amount_paid = $request->amount_paid;
+        $user->subscriptionID = $request->subscriptionID;
         $user->expire_date = $request->expire_date;
         $user->monthly_number_of_requests = 0;
         $user->tier_id = 1;
-        $user->subscribe_status = 'COMPLETED';
+        $user->subscribe_status = 'completed';
+        $user->current_logged_status = 'true';
 
 
         $user->save();
@@ -119,9 +114,56 @@ class AuthController extends Controller
             'request_limit' => $tierData->request_limit
         ];
 
-        return $this->apiResponse($data, 'User logged successfully');
+        if ($user->current_logged_status === 'false') {
+            $user->current_logged_status = 'true';
+            $user->save();
+            return $this->apiResponse($data, 'User logged successfully');
+        }
+
+        throw ValidationException::withMessages([
+            'msg' => ['User already logged.'],
+        ]);
     }
 
+    public function logout()
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return $this->NotFoundError();
+        };
+
+        $user->current_logged_status = 'false';
+
+        DB::table('users')->where('id', $user->id)->update(['current_logged_status' => 'false']);
+
+        return;
+    }
+
+    public function updateStatus(Request $request, $id)
+    {
+        $user = User::find($id);
+
+        if (!$user) {
+            return $this->NotFoundError();
+        }
+
+
+        $user->subscribe_status = $request->subscribe_status;
+
+        if ($request->subscriptionID && $request->expire_date) {
+            $user->subscriptionID = $request->subscriptionID;
+            $user->expire_date = $request->expire_date;
+            $user->current_logged_status = 'true';
+        }
+
+        $user->save();
+
+        if ($user) {
+            return $this->apiResponse($user, '', 201);
+        }
+
+        return  $this->UnknownError();
+    }
 
     //***************** About reset password */
     public function validatePasswordRequest(Request $request)

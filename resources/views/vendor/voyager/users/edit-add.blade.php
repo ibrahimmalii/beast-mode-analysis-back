@@ -76,12 +76,8 @@
                                 <input type="text" class="form-control" id="tierId" name="tier_id" value="1" autocomplete="Tier ID">
                             </div>
                             <div class="form-group">
-                                <label for="text">Payer ID</label>
-                                <input type="text" class="form-control" id="month" name="payer_id" value="" autocomplete="Payer ID">
-                            </div>
-                            <div class="form-group">
-                                <label for="text">Amount Paid</label>
-                                <input type="text" class="form-control" id="month" name="amount_paid" value="" autocomplete="Amount Paid">
+                                <label for="text">Subscription ID</label>
+                                <input type="text" class="form-control" id="month" name="subscription_id" value="" autocomplete="Subscription ID">
                             </div>
                             <div class="form-group">
                                 <label for="text">Expire Date</label>
