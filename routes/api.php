@@ -50,6 +50,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 Route::get('/me', [AuthController::class, 'index'])->middleware('auth:sanctum');
 Route::post('/updateStatus/{id}', [AuthController::class, 'updateStatus']);
+Route::post('/isExist', [AuthController::class, 'isExist']);
 
 
 
@@ -109,3 +110,15 @@ Route::get('/offers', [OfferController::class, 'index']);
 Route::get('/patreon-register', [AuthController::class, 'patreonRegister']);
 Route::get('/patreon-login', [AuthController::class, 'patreonLogin']);
 Route::get('/patreon-data', [AuthController::class, 'patreonData']);
+
+
+// About cron jobs
+Route::get('/daily-reset', function () {
+    DB::update('UPDATE users set daily_number_of_requests = 0');
+    DB::table('key_statistics')->delete();
+});
+
+Route::get('/monthly-reset', function () {
+    DB::update('UPDATE requests SET monthly_number_of_requests = 0 , remaining_of_requests = 0');
+    DB::update('UPDATE users SET monthly_number_of_requests = 0, daily_number_of_requests =0, avg_monthly_number_of_requests =0');
+});

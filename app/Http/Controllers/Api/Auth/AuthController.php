@@ -41,6 +41,19 @@ class AuthController extends Controller
         return $data;
     }
 
+    public function isExist(Request $request)
+    {
+        if ($request->email) {
+            $user = User::where('email', $request->email)->first();
+
+            if ($user) {
+                return 'invalid data';
+            }
+
+            return;
+        }
+    }
+
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -120,6 +133,7 @@ class AuthController extends Controller
             return $this->apiResponse($data, 'User logged successfully');
         }
 
+
         throw ValidationException::withMessages([
             'msg' => ['User already logged.'],
         ]);
@@ -150,10 +164,12 @@ class AuthController extends Controller
 
         $user->subscribe_status = $request->subscribe_status;
 
-        if ($request->subscriptionID && $request->expire_date) {
+        if ($request->subscriptionID) {
             $user->subscriptionID = $request->subscriptionID;
             $user->expire_date = $request->expire_date;
             $user->current_logged_status = 'true';
+        }else{
+            $user->current_logged_status = 'false';
         }
 
         $user->save();

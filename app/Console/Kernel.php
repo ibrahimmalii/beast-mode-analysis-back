@@ -27,11 +27,6 @@ class Kernel extends ConsoleKernel
     {
         $schedule->command('day:delete')->daily();
         $schedule->command('month:delete')->monthly();
-        // $schedule->command('day:delete')->cron('*/1 4 1 * *');
-        // $schedule->command('day:delete')->cron('*/6 * * * *');
-        // $schedule->call(function () {
-        //     DB::table('key_statistics')->delete();
-        // })->everyMinute();
     }
 
 
