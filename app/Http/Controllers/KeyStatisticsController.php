@@ -6,17 +6,19 @@ use App\Models\KeyStatistics;
 use Illuminate\Http\Request;
 use App\Models\Requests;
 use App\Models\Tier;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 
 class KeyStatisticsController extends Controller
 {
-    public function create(Request $request){
+    public function create(Request $request)
+    {
 
-        // dd(request()->bearerToken());// To GET Token From Request
-        // dd(Auth::user()->id);// To Get User Information
+
         $user = Auth::user();
-        if(!$user){
+        if (!$user) {
             return $this->NotFoundError();
         };
 
@@ -31,7 +33,7 @@ class KeyStatisticsController extends Controller
         // dd($user->monthly_number_of_requests / 30);
 
         $msg = "Sorry you can't send another request today";
-        if($tier->request_limit == $user->monthly_number_of_requests){
+        if ($tier->request_limit < $user->monthly_number_of_requests || $tier->daily_requests_limit < $user->daily_number_of_requests) {
             return $msg;
         }
 
@@ -43,12 +45,24 @@ class KeyStatisticsController extends Controller
 
         // Update In Requests Table
         $currentRequest = Requests::where('id', 1)->get();
-        if(!$currentRequest){
+        if (!$currentRequest) {
             return $this->NotFoundError();
         };
 
-        $currentRequest[0]->monthly_number_of_requests = $currentRequest[0]->monthly_number_of_requests + 1;
-        $currentRequest[0]->remaining_of_requests = $currentRequest[0]->avaliable_requests - $currentRequest[0]->monthly_number_of_requests;
+        // Get remaining requests from quick fs
+        $response = Http::get('http://public-api.quickfs.net/v1/usage?api_key=8efcfb97fcb6b39a887149f058b54f1940ccdbb8');
+        $response->json();
+        $responseData = $response->json();
+        // dd($responseData);
+
+        // $currentRequest[0]->monthly_number_of_requests = $currentRequest[0]->monthly_number_of_requests + 1;
+        $currentRequest[0]->monthly_number_of_requests = $responseData['usage']['quota']['used'];
+        // $currentRequest[0]->remaining_of_requests = $currentRequest[0]->avaliable_requests - $currentRequest[0]->monthly_number_of_requests;
+        $currentRequest[0]->remaining_of_requests = $responseData['usage']['quota']['remaining'];
+        $currentRequest[0]->total_daily_requests = $currentRequest[0]->total_daily_requests + 1;
+        $users = User::get()->count();
+        // dd($users);
+        $currentRequest[0]->avg_daily_requests = ($currentRequest[0]->total_daily_requests + 1) / $users;
 
         $currentRequest[0]->save();
 
@@ -56,14 +70,14 @@ class KeyStatisticsController extends Controller
 
         // Angular
         $data = KeyStatistics::create([
-            'name'=> $request->name,
-            'description'=> $request->description,
-            'country' =>$request->country,
-            'symbol'=> $request->symbol,
+            'name' => $request->name,
+            'description' => $request->description,
+            'country' => $request->country,
+            'symbol' => $request->symbol,
             'exchange' => $request->exchange,
-            'industry'=> $request->industry,
-            'sector' =>$request->sector,
-            'qfs_symbol'=> $request->qfs_symbol,
+            'industry' => $request->industry,
+            'sector' => $request->sector,
+            'qfs_symbol' => $request->qfs_symbol,
             'price' => $request->price,
             'volume' => $request->volume,
             'market_cap' => $request->market_cap,
@@ -72,7 +86,7 @@ class KeyStatisticsController extends Controller
             'pe_ratio' => $request->pe_ratio,
             'ps_ratio' => $request->ps_ratio,
             'pb_ratio' => $request->pb_ratio,
-            'enterprise_value'=> $request->enterprise_value,
+            'enterprise_value' => $request->enterprise_value,
             'cogs' => $request->cogs,
             'gross_profit' => $request->gross_profit,
             'total_opex' => $request->total_opex,
@@ -121,28 +135,28 @@ class KeyStatisticsController extends Controller
             'dividends' => $request->dividends,
             'roe_median' => $request->roe_median,
             'price_to_book' => $request->price_to_book,
-            'enterprise_value_to_earnings' => $request-> enterprise_value_to_earnings,
+            'enterprise_value_to_earnings' => $request->enterprise_value_to_earnings,
             'enterprise_value_to_sales' => $request->enterprise_value_to_sales,
-            'enterprise_value_to_pretax_income' => $request->enterprise_value_to_pretax_income ,
-            'enterprise_value_to_fcf' => $request-> enterprise_value_to_fcf,
-            'roa_median' => $request-> roa_median,
-            'roic_median' => $request-> roic_median,
-            'gross_margin_median' => $request-> gross_margin_median,
-            'pretax_margin_median' => $request-> pretax_margin_median,
-            'fcf_margin_median' => $request-> fcf_margin_median,
-            'assets_to_equity_median' => $request-> assets_to_equity_median,
-            'debt_to_equity_median' => $request-> debt_to_equity_median,
-            'debt_to_assets_median' => $request-> debt_to_assets_median,
-            'revenue' => $request-> revenue,
-            'gross_margin' => $request-> gross_margin,
-            'eps_diluted' => $request-> eps_diluted,
-            'eps_diluted_growth' => $request-> eps_diluted_growth,
-            'dividends_per_share_growth' => $request-> dividends_per_share_growth,
+            'enterprise_value_to_pretax_income' => $request->enterprise_value_to_pretax_income,
+            'enterprise_value_to_fcf' => $request->enterprise_value_to_fcf,
+            'roa_median' => $request->roa_median,
+            'roic_median' => $request->roic_median,
+            'gross_margin_median' => $request->gross_margin_median,
+            'pretax_margin_median' => $request->pretax_margin_median,
+            'fcf_margin_median' => $request->fcf_margin_median,
+            'assets_to_equity_median' => $request->assets_to_equity_median,
+            'debt_to_equity_median' => $request->debt_to_equity_median,
+            'debt_to_assets_median' => $request->debt_to_assets_median,
+            'revenue' => $request->revenue,
+            'gross_margin' => $request->gross_margin,
+            'eps_diluted' => $request->eps_diluted,
+            'eps_diluted_growth' => $request->eps_diluted_growth,
+            'dividends_per_share_growth' => $request->dividends_per_share_growth,
             'dividends_quarterly' => $request->dividends_quarterly,
             'dividends_annual' => $request->dividends_annual,
             'beta' => $request->beta,
             'ev' => $request->ev,
-            'avg_vol_50d' =>$request->avg_vol_50d
+            'avg_vol_50d' => $request->avg_vol_50d
         ]);
 
 
@@ -153,10 +167,11 @@ class KeyStatisticsController extends Controller
     }
 
 
-    public function update(Request $request, $id){
+    public function update(Request $request, $id)
+    {
 
         $user = Auth::user();
-        if(!$user){
+        if (!$user) {
             return $this->NotFoundError();
         };
 
@@ -165,20 +180,20 @@ class KeyStatisticsController extends Controller
 
         $company = KeyStatistics::find($id);
 
-        if(!$company){
+        if (!$company) {
             return $this->NotFoundError();
         };
 
 
 
-        $company->name =$request->name;
+        $company->name = $request->name;
         $company->description = $request->description;
-        $company->country =$request->country;
-        $company->symbol= $request->symbol;
+        $company->country = $request->country;
+        $company->symbol = $request->symbol;
         $company->exchange = $request->exchange;
         $company->industry = $request->industry;
-        $company->sector =$request->sector;
-        $company->qfs_symbol= $request->qfs_symbol;
+        $company->sector = $request->sector;
+        $company->qfs_symbol = $request->qfs_symbol;
         $company->price = $request->price;
         $company->pe_ratio = $request->pe_ratio;
         $company->ps_ratio = $request->ps_ratio;
@@ -235,28 +250,28 @@ class KeyStatisticsController extends Controller
         $company->dividends = $request->dividends;
         $company->roe_median = $request->roe_median;
         $company->price_to_book = $request->price_to_book;
-        $company->enterprise_value_to_earnings = $request-> enterprise_value_to_earnings;
+        $company->enterprise_value_to_earnings = $request->enterprise_value_to_earnings;
         $company->enterprise_value_to_sales = $request->enterprise_value_to_sales;
-        $company->enterprise_value_to_pretax_income = $request->enterprise_value_to_pretax_income ;
-        $company->enterprise_value_to_fcf = $request-> enterprise_value_to_fcf;
-        $company->roa_median = $request-> roa_median;
-        $company->roic_median = $request-> roic_median;
-        $company->gross_margin_median = $request-> gross_margin_median;
-        $company->pretax_margin_median = $request-> pretax_margin_median;
-        $company->fcf_margin_median = $request-> fcf_margin_median;
-        $company->assets_to_equity_median = $request-> assets_to_equity_median;
-        $company->debt_to_equity_median = $request-> debt_to_equity_median;
-        $company->debt_to_assets_median = $request-> debt_to_assets_median;
-        $company->revenue = $request-> revenue;
-        $company->gross_margin = $request-> gross_margin;
-        $company->eps_diluted = $request-> eps_diluted;
-        $company->eps_diluted_growth = $request-> eps_diluted_growth;
-        $company->dividends_per_share_growth = $request-> dividends_per_share_growt;
+        $company->enterprise_value_to_pretax_income = $request->enterprise_value_to_pretax_income;
+        $company->enterprise_value_to_fcf = $request->enterprise_value_to_fcf;
+        $company->roa_median = $request->roa_median;
+        $company->roic_median = $request->roic_median;
+        $company->gross_margin_median = $request->gross_margin_median;
+        $company->pretax_margin_median = $request->pretax_margin_median;
+        $company->fcf_margin_median = $request->fcf_margin_median;
+        $company->assets_to_equity_median = $request->assets_to_equity_median;
+        $company->debt_to_equity_median = $request->debt_to_equity_median;
+        $company->debt_to_assets_median = $request->debt_to_assets_median;
+        $company->revenue = $request->revenue;
+        $company->gross_margin = $request->gross_margin;
+        $company->eps_diluted = $request->eps_diluted;
+        $company->eps_diluted_growth = $request->eps_diluted_growth;
+        $company->dividends_per_share_growth = $request->dividends_per_share_growt;
 
         $company->save();
 
         $currentRequest = Requests::where('id', 1)->get();
-        if(!$currentRequest){
+        if (!$currentRequest) {
             $currentRequest[0]->number_of_requests += 1;
         };
 
@@ -268,44 +283,47 @@ class KeyStatisticsController extends Controller
     }
 
 
-    public function index(){
+    public function index()
+    {
         $data = KeyStatistics::get();
 
         return $data;
     }
 
-    public function show($symbol){
+    public function show($symbol)
+    {
 
         $data = '';
 
         $company = KeyStatistics::where('qfs_symbol', $symbol)->get();
 
         // dd(count($company));
-        if(count($company) == 0){
+        if (count($company) == 0) {
             return $data = 'null';
         };
 
         $data = $company[0];
         return $data;
-
     }
 
-    public function delete($symbol){
+    public function delete($symbol)
+    {
         $company = KeyStatistics::where('symbol', $symbol)->delete();
 
 
         return $company;
     }
 
-    public function getAllNames(){
+    public function getAllNames()
+    {
         $companies = KeyStatistics::get();
         $names = [];
         $symbols = [];
-        foreach ($companies as $company){
+        foreach ($companies as $company) {
             array_push($names, $company->name);
         };
 
-        foreach ($companies as $company){
+        foreach ($companies as $company) {
             array_push($symbols, $company->symbol);
         };
 
@@ -315,6 +333,4 @@ class KeyStatisticsController extends Controller
         ];
         return $data;
     }
-
-
 }

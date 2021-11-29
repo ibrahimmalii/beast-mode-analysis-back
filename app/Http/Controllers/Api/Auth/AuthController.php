@@ -35,7 +35,8 @@ class AuthController extends Controller
 
         $data = [
             'user' => $user,
-            'request_limit' => $tierData->request_limit
+            'request_limit' => $tierData->request_limit,
+            'daily_requests_limit' => $tierData->daily_requests_limit
         ];
 
         return $data;
@@ -151,6 +152,37 @@ class AuthController extends Controller
         DB::table('users')->where('id', $user->id)->update(['current_logged_status' => 'false']);
 
         return;
+    }
+
+    public function updatePassword(Request $request ,$id){
+        $user = User::find($id);
+
+        if(!$user){
+            return $this->NotFoundError();
+        }
+
+        if(!Hash::check($request->password, $user->password)){
+            return $this->apiResponse(null , 'Password Not Matches' , 200);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'new_password' => ['required', 'string', 'min:8','max:255', 'confirmed']
+        ]);
+
+
+        if ($validator->fails())
+        {
+            return $this->apiResponse(null,$validator->errors(),200);
+        }
+
+        $user->password = Hash::make($request->new_password);
+        $user->save();
+
+        if($user){
+            return $this->apiResponse($user,'',201);
+        }
+
+        return  $this->UnknownError();
     }
 
     public function updateStatus(Request $request, $id)

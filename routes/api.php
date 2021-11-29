@@ -52,11 +52,14 @@ Route::get('/me', [AuthController::class, 'index'])->middleware('auth:sanctum');
 Route::post('/updateStatus/{id}', [AuthController::class, 'updateStatus']);
 Route::post('/isExist', [AuthController::class, 'isExist']);
 
+// Update User
+Route::post('/updatePassword/{id}', [AuthController::class, 'updatePassword'])->middleware('auth:sanctum');
+
 
 
 
 $responseData = '';
-Route::get('/test', function (Request $request) {
+Route::get('/test', function () {
     $response = Http::get('https://public-api.quickfs.net/v1/data/all-data/FB:US?api_key=4ed0f30c148834139f4bb3c4421341690f3d3c07');
     $response->json();
     $responseData = $response->json();
@@ -65,7 +68,6 @@ Route::get('/test', function (Request $request) {
 
 
 // Crud For Key Statistics
-// Route::post('/keyStatistics', [KeyStatisticsController::class , 'create'])->middleware('auth:sanctum');
 Route::post('/keyStatistics', [KeyStatisticsController::class, 'create'])->middleware('auth:sanctum');
 // Route::post('/keyStatistics', [KeyStatisticsController::class , 'create']);
 Route::post('/keyStatistics/update/{symbol}', [KeyStatisticsController::class, 'update'])->middleware(['auth:sanctum', 'admin']);
@@ -115,6 +117,8 @@ Route::get('/patreon-data', [AuthController::class, 'patreonData']);
 // About cron jobs
 Route::get('/daily-reset', function () {
     DB::update('UPDATE users set daily_number_of_requests = 0');
+    DB::update('UPDATE requests set total_daily_requests = 0');
+    DB::update('UPDATE requests set avg_daily_requests = 0');
     DB::table('key_statistics')->delete();
 });
 
